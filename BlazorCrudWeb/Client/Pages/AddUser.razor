@@ -1,0 +1,144 @@
+﻿@page "/AddUser"
+@page "/AddUser/Edit/{UserId:int}"
+@using BlazorCrudWeb.Shared.Models
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+<PageTitle>Add User</PageTitle>
+
+<section class="vh-100" style="background-color: #eee;">
+  <div class="container h-100">
+    <div class="row d-flex justify-content-center align-items-center h-100">
+      <div class="col-lg-12 col-xl-11">
+        <div class="card text-black" style="border-radius: 25px;">
+          <div class="card-body p-md-5">
+            <div class="row justify-content-center">
+              <div class="col-md-10 col-lg-6 col-xl-5 order-2 order-lg-1">
+
+                <p class="text-center h1 fw-bold mb-5 mx-1 mx-md-4 mt-4">@updateMessage</p>
+
+                <EditForm Model="@user" class="mx-1 mx-md-4" OnValidSubmit="SaveUser">
+
+                  <div class="d-flex flex-row align-items-center mb-4">
+                    <i class="fas fa-user fa-lg me-3 fa-fw"></i>
+                    <div class="form-outline flex-fill mb-0">
+                      <input type="text" id="form3Example1c" class="form-control" @bind-value=user.UserName />
+                      <label class="form-label" for="form3Example1c">Your Name</label>
+                    </div>
+                  </div>
+
+                  <div class="d-flex flex-row align-items-center mb-4">
+                    <i class="fas fa-envelope fa-lg me-3 fa-fw"></i>
+                    <div class="form-outline flex-fill mb-0">
+                                            <input type="email" id="form3Example3c" class="form-control" @bind-value=user.Email />
+                      <label class="form-label" for="form3Example3c">Your Email</label>
+                    </div>
+                  </div>
+
+                  <div class="d-flex flex-row align-items-center mb-4">
+                    <i class="fas fa-lock fa-lg me-3 fa-fw"></i>
+                    <div class="form-outline flex-fill mb-0">
+                                            <input type="password" id="form3Example4c" class="form-control" @bind-value=user.Password/>
+                      <label class="form-label" for="form3Example4c">Password</label>
+                    </div>
+                  </div>
+                                    @if (UserId == 0)
+                                    {
+                                        <div class="d-flex flex-row align-items-center mb-4">
+                                            <i class="fas fa-key fa-lg me-3 fa-fw"></i>
+                                            <div class="form-outline flex-fill mb-0">
+                                                <input type="password" id="form3Example4cd" class="form-control" @bind-value=user.PasswordRepeat />
+                                                <label class="form-label" for="form3Example4cd">Repeat your password</label>
+                                                <br/>@passwordMessage
+                                            </div>
+                                        </div>
+
+                                        <div class="form-check d-flex justify-content-center mb-5">
+                                            <input class="form-check-input me-2" type="checkbox" id="form2Example3c" @bind-value=user.Agreement />
+                                            <label class="form-check-label" for="form2Example3">
+                                                I agree all statements in <a href="#!">Terms of service</a>
+                                                <br />@agreementMessage
+                                            </label>                    
+                                        </div>
+                                    }
+                                    <div class="d-flex justify-content-center mx-4 mb-3 mb-lg-4">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        @updateMessage                  
+
+                    </button>
+                  </div>
+
+                </EditForm>
+
+              </div>
+              <div class="col-md-10 col-lg-6 col-xl-7 d-flex align-items-center order-1 order-lg-2">
+
+                <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-registration/draw1.webp"
+                  class="img-fluid" alt="Sample image">
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+@code
+{
+    [Parameter]
+    public int UserId{ get; set; }
+    public userModel user = new();
+    public String agreementMessage = "",passwordMessage="",updateMessage="Register";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if(UserId==0)
+        {
+            updateMessage = "Register";
+        }
+        else
+        {
+            updateMessage = "Update";
+            var usr = await Http.GetFromJsonAsync<User>("api/user/GetUser?UserId=" + UserId);
+            user.UserName = usr.UserName;
+            user.Email = usr.Email;
+            user.Password = usr.Password;
+        }
+
+
+    }
+
+    public async Task SaveUser()
+    {
+        User usr = new User();
+        usr.UserName = user.UserName;
+        usr.Email = user.Email;
+        usr.Password = user.Password;
+        if (UserId == 0)
+        {
+            if (user.Agreement == true)
+            {
+                if (user.Password == user.PasswordRepeat)
+                {                                      
+                    await Http.PostAsJsonAsync("api/user/SaveUser", usr);
+
+                }
+                else
+                {
+                    passwordMessage = "Passwords not match";
+                }
+            }
+            else
+            {
+                agreementMessage = "Please read and check";
+            }
+        }
+        else
+        {
+            usr.Id = UserId;
+            await Http.PostAsJsonAsync("api/user/UpdateUser", usr);
+        }
+        NavigationManager.NavigateTo("/");
+    }
+}

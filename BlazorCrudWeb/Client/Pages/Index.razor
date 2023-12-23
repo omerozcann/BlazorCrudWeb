@@ -1,0 +1,36 @@
+﻿@page "/"
+@using BlazorCrudWeb.Shared.Models
+@inject HttpClient Http
+<PageTitle>Users</PageTitle>
+
+<table class="table table-bordered align-middle">
+    <thead>
+        <tr>          
+            <th>UserName</th>
+            <th>Email</th>
+            <th>Password</th>
+            <th>Controls</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in userList)
+        {
+            <tr>
+                <td>@item.UserName</td>
+                <td>@item.Email</td>
+                <td>@item.Password</td>
+                <td><a href="DeleteUser/@item.Id" class="btn btn-outline-danger" role="button">Delete</a>
+                <a href="AddUser/Edit/@item.Id" class="btn btn-outline-danger" role="button">Update</a></td>
+            </tr>
+        }
+    </tbody>
+</table>
+@code
+{
+    public List<User> userList=new();
+   
+    protected override async Task OnInitializedAsync()
+    {                
+        userList = await Http.GetFromJsonAsync<List<User>>("api/user/GetUsers");        
+    }
+}
